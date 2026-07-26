@@ -149,6 +149,7 @@ New apps can be added to `utils/constants.js` under the `THIRD_PARTY_APPS` array
 
 ## 📸 Screenshots
 
-| Dashboard Idle (Default) | Store Diagnostic Report (Shopify storefront active) |
+| Dashboard (Active Scan) | Exported HTML Report Dashboard |
 | :---: | :---: |
-| *[Screenshot Placeholder]* | *[Screenshot Placeholder]* |
+| ![Dashboard Scan Results](screenshots/dashboard_active.png) | ![Exported HTML Report Dashboard](screenshots/exported_report.png) |
+
