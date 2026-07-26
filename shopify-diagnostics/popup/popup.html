@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlexyPe Store Diagnostics</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="logo-box">
+      <div class="logo-circle"></div>
+      <div class="logo-text">
+        <h1>FLEXY<span class="highlight">PE</span></h1>
+        <span class="sub-title">Store Diagnostics Console</span>
+      </div>
+    </div>
+    <div class="status-indicator-container">
+      <span class="indicator-label">Status:</span>
+      <span id="tab-status-badge" class="badge badge-grey">Idle</span>
+    </div>
+  </header>
+
+  <!-- Loading State -->
+  <div id="loading-state" class="state-container">
+    <div class="pulse-ring"></div>
+    <div class="loading-spinner"></div>
+    <p class="loading-text">Scanning Shopify storefront metadata...</p>
+    <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+  </div>
+
+  <!-- Not Shopify State -->
+  <div id="not-shopify-state" class="state-container hidden">
+    <div class="warn-icon">⚠️</div>
+    <h2>Non-Shopify Storefront</h2>
+    <p>This website does not appear to be running on Shopify.</p>
+    <p class="subtext">Make sure you are on a public storefront page.</p>
+  </div>
+
+  <!-- Error State (Permissions/Blocked) -->
+  <div id="error-state" class="state-container hidden">
+    <div class="error-icon">❌</div>
+    <h2>Extraction Blocked</h2>
+    <p id="error-message">Could not access page contents. Ensure you are not on an system page (like chrome://) and the page is fully loaded.</p>
+  </div>
+
+  <!-- Dashboard Content -->
+  <main id="dashboard" class="hidden">
+    
+    <!-- Section: Store Information -->
+    <section class="card">
+      <div class="card-header">
+        <span class="header-icon">ℹ️</span>
+        <h3>Store Information</h3>
+      </div>
+      <div class="card-body grid-2 col-gap-10">
+        <div class="info-group">
+          <label>Shop Name</label>
+          <div class="value-wrapper">
+            <span id="info-shop-name" class="info-val">-</span>
+            <button class="copy-btn" data-copy="info-shop-name" title="Copy"></button>
+          </div>
+        </div>
+        <div class="info-group">
+          <label>Page Type</label>
+          <div class="value-wrapper">
+            <span id="info-page-type" class="info-val info-badge">-</span>
+          </div>
+        </div>
+        <div class="info-group">
+          <label>Store Hostname</label>
+          <div class="value-wrapper">
+            <span id="info-hostname" class="info-val font-mono truncate">-</span>
+            <button class="copy-btn" data-copy="info-hostname" title="Copy"></button>
+          </div>
+        </div>
+        <div class="info-group">
+          <label>Shopify Domain</label>
+          <div class="value-wrapper">
+            <span id="info-shopify-domain" class="info-val font-mono truncate">-</span>
+            <button class="copy-btn" data-copy="info-shopify-domain" title="Copy"></button>
+          </div>
+        </div>
+        <div class="info-group col-span-2 divider-top"></div>
+        <div class="info-group">
+          <label>Locale / Lang</label>
+          <span id="info-locale" class="info-val">-</span>
+        </div>
+        <div class="info-group">
+          <label>Country / Currency</label>
+          <span id="info-country-currency" class="info-val">-</span>
+        </div>
+        <div class="info-group col-span-2 divider-top"></div>
+        <div class="info-group col-span-2">
+          <label>Active Theme</label>
+          <div class="theme-box">
+            <div class="value-wrapper">
+              <span id="info-theme-name" class="info-val highlight-val">-</span>
+              <button class="copy-btn" data-copy="info-theme-name" title="Copy"></button>
+            </div>
+            <div class="theme-sub-details">
+              <span>ID: <code id="info-theme-id">-</code></span>
+              <span>Role: <code id="info-theme-role">-</code></span>
+              <span>Store ID: <code id="info-theme-store-id">-</code></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: FlexyPe Products -->
+    <section class="card">
+      <div class="card-header">
+        <span class="header-icon">🚀</span>
+        <h3>FlexyPe Products</h3>
+      </div>
+      <div class="card-body flex-col gap-10">
+        <!-- FlexyPe Checkout -->
+        <div class="product-row">
+          <div class="product-meta">
+            <div class="status-marker" id="checkout-marker"></div>
+            <div>
+              <h4 class="product-title">FlexyPe Checkout</h4>
+              <span class="confidence-label">Confidence: <span id="checkout-confidence">-</span></span>
+            </div>
+          </div>
+          <button class="evidence-toggle" data-target="checkout-evidence">Inspect Signals</button>
+        </div>
+        <div id="checkout-evidence" class="evidence-box hidden">
+          <ul id="checkout-evidence-list" class="evidence-list"></ul>
+        </div>
+
+        <!-- FlexyPass -->
+        <div class="product-row divider-top">
+          <div class="product-meta">
+            <div class="status-marker" id="pass-marker"></div>
+            <div>
+              <h4 class="product-title">FlexyPass Open Login</h4>
+              <span class="confidence-label">Confidence: <span id="pass-confidence">-</span></span>
+            </div>
+          </div>
+          <button class="evidence-toggle" data-target="pass-evidence">Inspect Signals</button>
+        </div>
+        <div id="pass-evidence" class="evidence-box hidden">
+          <ul id="pass-evidence-list" class="evidence-list"></ul>
+        </div>
+
+        <!-- FlexyCart -->
+        <div class="product-row divider-top">
+          <div class="product-meta">
+            <div class="status-marker" id="cart-marker"></div>
+            <div>
+              <h4 class="product-title">FlexyCart Slide Drawer</h4>
+              <span class="confidence-label">Confidence: <span id="cart-confidence">-</span></span>
+            </div>
+          </div>
+          <button class="evidence-toggle" data-target="cart-evidence">Inspect Signals</button>
+        </div>
+        <div id="cart-evidence" class="evidence-box hidden">
+          <ul id="cart-evidence-list" class="evidence-list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Disabled Integrations -->
+    <section class="card">
+      <div class="card-header">
+        <span class="header-icon">⚠️</span>
+        <h3>Disabled Integrations</h3>
+      </div>
+      <div class="card-body flex-col gap-10">
+        <!-- FlexyPe Checkout Inactive -->
+        <div class="disabled-product-box" id="checkout-disabled-box">
+          <div class="disabled-header">
+            <div class="status-marker small-marker" id="checkout-disabled-marker"></div>
+            <h5>FlexyPe Checkout</h5>
+          </div>
+          <p class="disabled-reason" id="checkout-disabled-reason">Scanning...</p>
+        </div>
+        
+        <!-- FlexyPass Inactive -->
+        <div class="disabled-product-box" id="pass-disabled-box">
+          <div class="disabled-header">
+            <div class="status-marker small-marker" id="pass-disabled-marker"></div>
+            <h5>FlexyPass</h5>
+          </div>
+          <p class="disabled-reason" id="pass-disabled-reason">Scanning...</p>
+        </div>
+
+        <!-- FlexyCart Inactive -->
+        <div class="disabled-product-box" id="cart-disabled-box">
+          <div class="disabled-header">
+            <div class="status-marker small-marker" id="cart-disabled-marker"></div>
+            <h5>FlexyCart</h5>
+          </div>
+          <p class="disabled-reason" id="cart-disabled-reason">Scanning...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Third Party Apps -->
+    <section class="card">
+      <div class="card-header">
+        <span class="header-icon">⚙️</span>
+        <h3>Third Party Apps</h3>
+      </div>
+      <div class="card-body">
+        <div id="apps-container" class="apps-grid">
+          <!-- Apps lists populating here -->
+          <div class="no-apps-detected">No common third party apps detected.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Store Features -->
+    <section class="card">
+      <div class="card-header">
+        <span class="header-icon">🛠️</span>
+        <h3>Store Features</h3>
+      </div>
+      <div class="card-body">
+        <div class="features-grid">
+          <div class="feature-tag" id="feat-search">
+            <span class="feature-status"></span>
+            <span class="feature-name">Search</span>
+          </div>
+          <div class="feature-tag" id="feat-predictiveSearch">
+            <span class="feature-status"></span>
+            <span class="feature-name">Predictive Search</span>
+          </div>
+          <div class="feature-tag" id="feat-wishlist">
+            <span class="feature-status"></span>
+            <span class="feature-name">Wishlist</span>
+          </div>
+          <div class="feature-tag" id="feat-customerLogin">
+            <span class="feature-status"></span>
+            <span class="feature-name">Customer Login</span>
+          </div>
+          <div class="feature-tag" id="feat-customerAccounts">
+            <span class="feature-status"></span>
+            <span class="feature-name">Customer Accounts</span>
+          </div>
+          <div class="feature-tag" id="feat-currencySelector">
+            <span class="feature-status"></span>
+            <span class="feature-name">Currency Selector</span>
+          </div>
+          <div class="feature-tag" id="feat-languageSelector">
+            <span class="feature-status"></span>
+            <span class="feature-name">Language Selector</span>
+          </div>
+          <div class="feature-tag" id="feat-cartDrawer">
+            <span class="feature-status"></span>
+            <span class="feature-name">Cart Drawer</span>
+          </div>
+          <div class="feature-tag" id="feat-quickView">
+            <span class="feature-status"></span>
+            <span class="feature-name">Quick View</span>
+          </div>
+          <div class="feature-tag" id="feat-recentlyViewed">
+            <span class="feature-status"></span>
+            <span class="feature-name">Recently Viewed</span>
+          </div>
+          <div class="feature-tag" id="feat-newsletter">
+            <span class="feature-status"></span>
+            <span class="feature-name">Newsletter Form</span>
+          </div>
+          <div class="feature-tag" id="feat-chatWidget">
+            <span class="feature-status"></span>
+            <span class="feature-name">Chat Widget</span>
+          </div>
+          <div class="feature-tag" id="feat-reviews">
+            <span class="feature-status"></span>
+            <span class="feature-name">Product Reviews</span>
+          </div>
+          <div class="feature-tag" id="feat-productRecommendations">
+            <span class="feature-status"></span>
+            <span class="feature-name">Recommendations</span>
+          </div>
+          <div class="feature-tag" id="feat-infiniteScroll">
+            <span class="feature-status"></span>
+            <span class="feature-name">Infinite Scroll</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer Actions -->
+  <footer class="app-footer">
+    <div class="footer-meta">
+      <span class="tag">FlexyPe Support Console</span>
+      <span class="version">v1.0.0</span>
+    </div>
+    <div class="footer-btns">
+      <button id="export-btn" class="btn btn-secondary hidden">Export Report</button>
+      <button id="refresh-btn" class="btn btn-primary">Refresh Diagnostics</button>
+    </div>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
