@@ -1,48 +1,50 @@
-// Content Script wrapper executing detectors and collecting results
-(() => {
+// Content Aggregator — runs last in MAIN world injection sequence.
+// Initializes scan context, runs all detectors, cleans up, and returns payload.
+(function() {
   try {
-    if (!window.__shopifyDiagnostics) {
-      return {
-        error: "Diagnostics namespaces could not be initialized or files injected out of order.",
-        isShopify: false
-      };
+    var NS = window.__shopifyDiagnostics;
+    var H = NS.Helpers;
+
+    // Initialize cached DOM context (single DOM walk for all detectors)
+    H.initContext();
+
+    // 1. Store Detection (is this Shopify + metadata)
+    var storeResult = NS.StoreDetector.detect();
+
+    if (!storeResult.isShopify) {
+      H.resetContext();
+      return { isShopify: false, data: null };
     }
 
-    const SD = window.__shopifyDiagnostics.StoreDetector;
-    const FD = window.__shopifyDiagnostics.FlexyPeDetector;
-    const DD = window.__shopifyDiagnostics.DisabledDetector;
-    const AD = window.__shopifyDiagnostics.AppDetector;
-    const FeatD = window.__shopifyDiagnostics.FeatureDetector;
+    // 2. FlexyPe Product Detection
+    var flexypeResult = NS.FlexyPeDetector.detect();
 
-    // Run Store Detection first
-    const storeCheck = SD.detect();
-    if (!storeCheck.isShopify) {
-      return {
-        isShopify: false
-      };
-    }
+    // 3. Disabled Integration Detection
+    var disabledResult = NS.DisabledDetector.detect();
 
-    // Run all other detectors
-    const flexypeResult = FD.detect();
-    const disabledResult = DD.detect();
-    const appsResult = AD.detect();
-    const featuresResult = FeatD.detect();
+    // 4. Third-Party App Detection
+    var appResult = NS.AppDetector.detect();
 
-    // Pack the final response payload
+    // 5. Store Feature Detection
+    var featureResult = NS.FeatureDetector.detect();
+
+    // Cleanup cached context to free memory
+    H.resetContext();
+
     return {
       isShopify: true,
       data: {
-        storeInfo: storeCheck.data,
+        storeInfo: storeResult.data,
         flexypeProducts: flexypeResult,
         disabledIntegrations: disabledResult,
-        thirdPartyApps: appsResult,
-        storeFeatures: featuresResult
+        thirdPartyApps: appResult,
+        storeFeatures: featureResult
       }
     };
   } catch (e) {
-    return {
-      error: e.message || "Failed running DOM inspections",
-      isShopify: false
-    };
+    if (window.__shopifyDiagnostics && window.__shopifyDiagnostics.Helpers) {
+      window.__shopifyDiagnostics.Helpers.resetContext();
+    }
+    return { isShopify: false, error: e.message || String(e) };
   }
 })();

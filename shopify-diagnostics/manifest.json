@@ -5,8 +5,7 @@
   "description": "Internal engineering diagnostic tool for Shopify stores.",
   "permissions": [
     "activeTab",
-    "scripting",
-    "tabs"
+    "scripting"
   ],
   "host_permissions": [
     "http://*/*",

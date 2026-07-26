@@ -1,0 +1,8 @@
+# Shopify Diagnostics Extension - Git Ignore
+test_bundle.js
+*.zip
+*.crx
+*.pem
+node_modules/
+.DS_Store
+Thumbs.db

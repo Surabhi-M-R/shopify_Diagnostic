@@ -1,162 +1,221 @@
 // Helper Functions for Shopify Store Diagnostics Extension
+// Provides cached DOM scanning and confidence evaluation utilities
 window.__shopifyDiagnostics = window.__shopifyDiagnostics || {};
 
 window.__shopifyDiagnostics.Helpers = {
+  _cache: null,
+
   /**
-   * Safely selects a DOM element, returning null if it doesn't exist
-   * @param {string} selector 
-   * @returns {Element|null}
+   * Pre-collects all DOM elements needed by detectors into an internal cache.
+   * Eliminates repeated querySelectorAll calls across multiple detectors.
    */
+  initContext: function() {
+    try {
+      var allScripts = Array.from(document.querySelectorAll("script"));
+      var scriptEntries = allScripts.map(function(s) {
+        return {
+          element: s,
+          src: (s.src || "").toLowerCase(),
+          content: s.textContent || "",
+          type: (s.getAttribute("type") || "").toLowerCase(),
+          isDisabled: s.hasAttribute("disabled") ||
+                      s.getAttribute("type") === "text/plain" ||
+                      s.getAttribute("type") === "text/x-template"
+        };
+      });
+
+      var allLinks = Array.from(document.querySelectorAll("link[rel='stylesheet']"));
+      var stylesheetHrefs = allLinks
+        .filter(function(l) { return !!l.href; })
+        .map(function(l) { return l.href.toLowerCase(); });
+
+      var comments = [];
+      try {
+        var iterator = document.createNodeIterator(
+          document.documentElement, NodeFilter.SHOW_COMMENT, null
+        );
+        var node, count = 0;
+        while ((node = iterator.nextNode()) && count < 500) {
+          count++;
+          comments.push(node.nodeValue || "");
+        }
+      } catch (e) { /* silent */ }
+
+      this._cache = {
+        scriptEntries: scriptEntries,
+        stylesheetHrefs: stylesheetHrefs,
+        comments: comments,
+        disabledScripts: scriptEntries.filter(function(s) { return s.isDisabled; })
+      };
+    } catch (e) {
+      this._cache = null;
+    }
+  },
+
+  resetContext: function() { this._cache = null; },
+
+  escapeRegex: function(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  },
+
   safeQuerySelector: function(selector) {
-    try {
-      return document.querySelector(selector);
-    } catch (e) {
-      console.warn("Invalid selector: " + selector, e);
-      return null;
-    }
+    try { return document.querySelector(selector); }
+    catch (e) { return null; }
   },
 
-  /**
-   * Safely selects all matching DOM elements, returning an empty array if invalid
-   * @param {string} selector 
-   * @returns {Element[]}
-   */
   safeQuerySelectorAll: function(selector) {
-    try {
-      return Array.from(document.querySelectorAll(selector));
-    } catch (e) {
-      console.warn("Invalid selector helper: " + selector, e);
-      return [];
-    }
+    try { return Array.from(document.querySelectorAll(selector)); }
+    catch (e) { return []; }
   },
 
-  /**
-   * Safely checks if a global variable exists on window
-   * @param {string} name 
-   * @returns {boolean}
-   */
   hasGlobal: function(name) {
     try {
-      const parts = name.split(".");
-      let current = window;
-      for (const part of parts) {
+      var parts = name.split(".");
+      var current = window;
+      for (var i = 0; i < parts.length; i++) {
         if (current === undefined || current === null) return false;
-        current = current[part];
+        current = current[parts[i]];
       }
       return current !== undefined && current !== null;
-    } catch (e) {
-      return false;
-    }
+    } catch (e) { return false; }
   },
 
-  /**
-   * Safely retrieves the value of a global variable or returns null
-   * @param {string} name 
-   * @returns {any}
-   */
   getGlobalValue: function(name) {
     try {
-      const parts = name.split(".");
-      let current = window;
-      for (const part of parts) {
+      var parts = name.split(".");
+      var current = window;
+      for (var i = 0; i < parts.length; i++) {
         if (current === undefined || current === null) return null;
-        current = current[part];
+        current = current[parts[i]];
       }
       return current;
-    } catch (e) {
-      return null;
-    }
+    } catch (e) { return null; }
   },
 
   /**
-   * Checks if any script element has src containing pattern or content matching pattern
-   * @param {string|RegExp} pattern 
-   * @returns {boolean}
+   * Checks if any script element has src or textContent matching pattern.
+   * Strings are auto-escaped for literal matching; pass RegExp for pattern matching.
    */
   hasScript: function(pattern) {
     try {
-      const scripts = this.safeQuerySelectorAll("script");
-      const regex = typeof pattern === "string" ? new RegExp(pattern, "i") : pattern;
-      return scripts.some(script => {
-        if (script.src && regex.test(script.src)) return true;
-        if (script.textContent && regex.test(script.textContent)) return true;
-        return false;
+      var regex = (typeof pattern === "string") ? new RegExp(this.escapeRegex(pattern), "i") : pattern;
+      if (this._cache) {
+        return this._cache.scriptEntries.some(function(e) {
+          return (e.src && regex.test(e.src)) || regex.test(e.content);
+        });
+      }
+      var scripts = this.safeQuerySelectorAll("script");
+      return scripts.some(function(s) {
+        return (s.src && regex.test(s.src)) || (s.textContent && regex.test(s.textContent));
       });
-    } catch (e) {
-      return false;
-    }
+    } catch (e) { return false; }
   },
 
-  /**
-   * Checks if any link or stylesheet contains pattern
-   * @param {string|RegExp} pattern 
-   * @returns {boolean}
-   */
+  /** Checks only external script src attributes */
+  hasScriptSrc: function(pattern) {
+    try {
+      var regex = (typeof pattern === "string") ? new RegExp(this.escapeRegex(pattern), "i") : pattern;
+      if (this._cache) {
+        return this._cache.scriptEntries.some(function(e) { return e.src && regex.test(e.src); });
+      }
+      return this.safeQuerySelectorAll("script[src]").some(function(s) { return regex.test(s.src); });
+    } catch (e) { return false; }
+  },
+
+  /** Checks only inline script textContent */
+  hasInlineScript: function(pattern) {
+    try {
+      var regex = (typeof pattern === "string") ? new RegExp(this.escapeRegex(pattern), "i") : pattern;
+      if (this._cache) {
+        return this._cache.scriptEntries.some(function(e) {
+          return !e.src && e.content && regex.test(e.content);
+        });
+      }
+      return this.safeQuerySelectorAll("script:not([src])").some(function(s) {
+        return s.textContent && regex.test(s.textContent);
+      });
+    } catch (e) { return false; }
+  },
+
   hasStylesheet: function(pattern) {
     try {
-      const links = this.safeQuerySelectorAll("link[rel='stylesheet']");
-      const regex = typeof pattern === "string" ? new RegExp(pattern, "i") : pattern;
-      return links.some(link => link.href && regex.test(link.href));
-    } catch (e) {
-      return false;
-    }
+      var regex = (typeof pattern === "string") ? new RegExp(this.escapeRegex(pattern), "i") : pattern;
+      if (this._cache) {
+        return this._cache.stylesheetHrefs.some(function(h) { return regex.test(h); });
+      }
+      return this.safeQuerySelectorAll("link[rel='stylesheet']").some(function(l) {
+        return l.href && regex.test(l.href);
+      });
+    } catch (e) { return false; }
   },
 
-  /**
-   * Retrieves meta tag content
-   * @param {string} name - name or property attribute
-   * @returns {string|null}
-   */
   getMetaContent: function(name) {
     try {
-      const meta = this.safeQuerySelector(`meta[name='${name}'], meta[property='${name}']`);
+      var meta = this.safeQuerySelector("meta[name='" + name + "'], meta[property='" + name + "']");
       return meta ? meta.getAttribute("content") : null;
-    } catch (e) {
-      return null;
-    }
+    } catch (e) { return null; }
   },
 
-  /**
-   * Search HTML comments for a string or regex
-   * @param {string|RegExp} pattern 
-   * @returns {string[]} - Array of matching comment texts
-   */
+  /** Searches HTML comment nodes using pre-cached collection */
   searchComments: function(pattern) {
-    const matches = [];
+    var matches = [];
     try {
-      const regex = typeof pattern === "string" ? new RegExp(pattern, "i") : pattern;
-      const iterator = document.createNodeIterator(
-        document.documentElement,
-        NodeFilter.SHOW_COMMENT,
-        null
-      );
-      
-      let currentNode;
-      let count = 0;
-      // Safeguard against infinite loops and excessive scanning
-      while ((currentNode = iterator.nextNode()) && count < 200) {
-        count++;
-        if (regex.test(currentNode.nodeValue)) {
-          matches.push(currentNode.nodeValue.trim());
-        }
+      var regex = (typeof pattern === "string") ? new RegExp(this.escapeRegex(pattern), "i") : pattern;
+      if (this._cache) {
+        this._cache.comments.forEach(function(text) {
+          if (regex.test(text)) matches.push(text.trim());
+        });
+        return matches;
       }
-    } catch (e) {
-      console.warn("Error scanning comment nodes", e);
-    }
+      var iterator = document.createNodeIterator(document.documentElement, NodeFilter.SHOW_COMMENT, null);
+      var currentNode, count = 0;
+      while ((currentNode = iterator.nextNode()) && count < 500) {
+        count++;
+        if (regex.test(currentNode.nodeValue)) matches.push(currentNode.nodeValue.trim());
+      }
+    } catch (e) { /* silent */ }
     return matches;
   },
 
-  /**
-   * Calculates confidence score based on input signals
-   * @param {Array<{detected: boolean, weight: number, name: string}>} signals 
-   * @returns {{score: number, evidence: string[]}}
-   */
-  evaluateDetection: function(signals) {
-    let score = 0;
-    let totalWeight = 0;
-    const evidence = [];
+  /** Returns disabled script entries matching a pattern (cached) */
+  getDisabledScripts: function(pattern) {
+    try {
+      var regex = (typeof pattern === "string") ? new RegExp(this.escapeRegex(pattern), "i") : pattern;
+      if (this._cache) {
+        return this._cache.disabledScripts.filter(function(e) {
+          return regex.test(e.content) || regex.test(e.src);
+        });
+      }
+      return this.safeQuerySelectorAll("script[type='text/plain'], script[type='text/x-template'], script[disabled]")
+        .filter(function(s) {
+          return regex.test(s.textContent || "") || regex.test(s.getAttribute("src") || "");
+        });
+    } catch (e) { return []; }
+  },
 
-    signals.forEach(sig => {
+  /** Finds elements matching selectors that are hidden via CSS */
+  findHiddenElements: function(selectors) {
+    try {
+      return this.safeQuerySelectorAll(selectors).filter(function(el) {
+        try {
+          var style = window.getComputedStyle(el);
+          return style.display === "none" || style.visibility === "hidden" ||
+                 el.hasAttribute("hidden") || el.style.display === "none";
+        } catch (e) { return false; }
+      });
+    } catch (e) { return []; }
+  },
+
+  /**
+   * Calculates confidence score based on weighted signals.
+   * @param {Array} signals - [{detected, weight, name}]
+   * @param {number} [threshold=80] - Confidence % to classify as "Detected"
+   */
+  evaluateDetection: function(signals, threshold) {
+    var detectedThreshold = threshold || 80;
+    var score = 0, totalWeight = 0, evidence = [];
+
+    signals.forEach(function(sig) {
       totalWeight += sig.weight;
       if (sig.detected) {
         score += sig.weight;
@@ -164,19 +223,12 @@ window.__shopifyDiagnostics.Helpers = {
       }
     });
 
-    const confidence = totalWeight > 0 ? Math.min(100, Math.round((score / totalWeight) * 100)) : 0;
-    
-    let status = window.__shopifyDiagnostics.Constants.DETECTION_STATUS.NOT_DETECTED;
-    if (confidence >= 80) {
-      status = window.__shopifyDiagnostics.Constants.DETECTION_STATUS.DETECTED;
-    } else if (confidence > 0) {
-      status = window.__shopifyDiagnostics.Constants.DETECTION_STATUS.POSSIBLE;
-    }
+    var confidence = totalWeight > 0 ? Math.min(100, Math.round((score / totalWeight) * 100)) : 0;
+    var S = window.__shopifyDiagnostics.Constants.DETECTION_STATUS;
+    var status = S.NOT_DETECTED;
+    if (confidence >= detectedThreshold) status = S.DETECTED;
+    else if (confidence > 0) status = S.POSSIBLE;
 
-    return {
-      status,
-      confidence,
-      evidence
-    };
+    return { status: status, confidence: confidence, evidence: evidence };
   }
 };
