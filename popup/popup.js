@@ -432,15 +432,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const recs = generateRecommendations(diagnostics);
 
     const badge = (s) => {
-      if (s === "Detected") return '<span class="badge badge-success">🟢 Detected</span>';
-      if (s === "Possible") return '<span class="badge badge-warning">🟡 Possible</span>';
-      if (s === "Not Detected") return '<span class="badge badge-critical">🔴 Not Detected</span>';
-      return '<span class="badge badge-unknown">⚫ Unknown</span>';
+      if (s === "Detected") return '<span class="badge badge-success"><span class="status-dot status-dot-success"></span>Detected</span>';
+      if (s === "Possible") return '<span class="badge badge-warning"><span class="status-dot status-dot-warning"></span>Possible</span>';
+      if (s === "Not Detected") return '<span class="badge badge-critical"><span class="status-dot status-dot-critical"></span>Not Detected</span>';
+      return '<span class="badge badge-unknown"><span class="status-dot status-dot-unknown"></span>Unknown</span>';
     };
 
     const disBadge = (s) => (s === "Detected" || s === "Possible") 
-      ? '<span class="badge badge-critical">⚠️ Trace Found</span>' 
-      : '<span class="badge badge-success">🟢 Clean</span>';
+      ? '<span class="badge badge-critical"><span class="status-dot status-dot-critical"></span>Trace Found</span>' 
+      : '<span class="badge badge-success"><span class="status-dot status-dot-success"></span>Clean</span>';
 
     const progress = (c, s) => {
       let f = "progress-fill-success";
@@ -455,10 +455,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let recsHtml = "";
     recs.forEach(r => {
-      let icon = "ℹ️", cls = "rec-info";
-      if (r.severity === "critical") { icon = "❌"; cls = "rec-critical"; }
-      else if (r.severity === "warning") { icon = "⚠️"; cls = "rec-warning"; }
-      else if (r.severity === "success") { icon = "✅"; cls = "rec-success"; }
+      let icon = "", cls = "rec-info";
+      if (r.severity === "critical") { 
+        icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="rec-svg"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
+        cls = "rec-critical"; 
+      }
+      else if (r.severity === "warning") { 
+        icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="rec-svg"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
+        cls = "rec-warning"; 
+      }
+      else if (r.severity === "success") { 
+        icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="rec-svg"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        cls = "rec-success"; 
+      }
+      else {
+        icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="rec-svg"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+      }
       recsHtml += `<div class="rec-item ${cls}"><span class="rec-icon">${icon}</span><div class="rec-content"><h4>${r.title}</h4><p>${r.desc}</p></div></div>`;
     });
 
@@ -619,7 +631,13 @@ document.addEventListener("DOMContentLoaded", () => {
     .rec-critical { border-left-color: var(--critical); }
     .rec-warning { border-left-color: var(--warning); }
     .rec-success { border-left-color: var(--success); }
-    .rec-icon { font-size: 20px; flex-shrink: 0; }
+    .rec-icon { flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .rec-svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2px; }
+    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+    .status-dot-success { background-color: var(--success); }
+    .status-dot-warning { background-color: var(--warning); }
+    .status-dot-critical { background-color: var(--critical); }
+    .status-dot-unknown { background-color: var(--unknown); }
     .rec-content h4 { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
     .rec-content p { font-size: 13px; color: var(--text-sub); }
     .footer { border-top: 1px solid var(--border-color); padding-top: 24px; margin-top: 48px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-sub); }
@@ -635,10 +653,10 @@ document.addEventListener("DOMContentLoaded", () => {
 <body>
   <div class="actions-bar no-print">
     <button onclick="navigator.clipboard.writeText(document.documentElement.outerHTML); alert('HTML source code copied!')" class="btn-action">
-      📋 Copy HTML Code
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy HTML Code
     </button>
     <button onclick="window.print()" class="btn-action btn-primary">
-      🖨️ Export as PDF / Print
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg> Export as PDF / Print
     </button>
   </div>
   <div class="report-container">

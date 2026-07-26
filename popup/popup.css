@@ -258,10 +258,19 @@ body {
   }
 }
 
-/* Not Shopify page / Warnings */
-.warn-icon,
+.warn-icon {
+  width: 44px;
+  height: 44px;
+  stroke: var(--color-yellow);
+  stroke-width: 2px;
+  margin-bottom: 16px;
+}
+
 .error-icon {
-  font-size: 38px;
+  width: 44px;
+  height: 44px;
+  stroke: var(--color-red);
+  stroke-width: 2px;
   margin-bottom: 16px;
 }
 
@@ -318,8 +327,12 @@ main {
   color: var(--text-main);
 }
 
-.header-icon {
-  font-size: 13px;
+.card-header .header-icon {
+  width: 15px;
+  height: 15px;
+  stroke: var(--primary);
+  stroke-width: 2px;
+  display: block;
 }
 
 .card-body {
