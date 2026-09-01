@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Shopify Store Diagnostics",
+  "name": "Shopify Store Inspector & Diagnostics",
   "version": "1.0.0",
-  "description": "Internal engineering diagnostic tool for Shopify stores.",
+  "description": "Universal diagnostic inspector for Shopify storefronts. Analyzes store metadata, active theme, third-party apps, core infrastructure stack, and storefront features.",
   "permissions": [
     "activeTab",
     "scripting"

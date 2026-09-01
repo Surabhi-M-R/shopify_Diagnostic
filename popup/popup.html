@@ -3,17 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FlexyPe Store Diagnostics</title>
+  <title>Shopify Store Inspector</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <!-- Header -->
   <header class="app-header">
     <div class="logo-box">
-      <img src="../icons/logo.png" alt="FlexyPe Logo" class="logo-image">
+      <svg class="logo-image" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16.5 3L21 7.5L16.5 12" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M21 7.5H9C5.68629 7.5 3 10.1863 3 13.5C3 16.8137 5.68629 19.5 9 19.5H15" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
       <div class="logo-text">
-        <h1>FLEXY<span class="highlight">PE</span></h1>
-        <span class="sub-title">Store Diagnostics Console</span>
+        <h1>SHOPIFY<span class="highlight">INSPECTOR</span></h1>
+        <span class="sub-title">Storefront Diagnostics Console</span>
       </div>
     </div>
     <div class="status-indicator-container">
@@ -26,7 +29,7 @@
   <div id="loading-state" class="state-container">
     <div class="pulse-ring"></div>
     <div class="loading-spinner"></div>
-    <p class="loading-text">Scanning Shopify storefront metadata...</p>
+    <p class="loading-text">Scanning Shopify storefront metadata &amp; stack...</p>
     <div class="loading-bar"><div class="loading-bar-fill"></div></div>
   </div>
 
@@ -42,7 +45,7 @@
   <div id="error-state" class="state-container hidden">
     <svg xmlns="http://www.w3.org/2000/svg" class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
     <h2>Extraction Blocked</h2>
-    <p id="error-message">Could not access page contents. Ensure you are not on an system page (like chrome://) and the page is fully loaded.</p>
+    <p id="error-message">Could not access page contents. Ensure you are not on a browser system page and the page is fully loaded.</p>
   </div>
 
   <!-- Dashboard Content -->
@@ -109,19 +112,19 @@
       </div>
     </section>
 
-    <!-- Section: FlexyPe Products -->
+    <!-- Section: Core Infrastructure Stack -->
     <section class="card">
       <div class="card-header">
         <svg xmlns="http://www.w3.org/2000/svg" class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-        <h3>FlexyPe Products</h3>
+        <h3>Core E-Commerce Architecture</h3>
       </div>
       <div class="card-body flex-col gap-10">
-        <!-- FlexyPe Checkout -->
+        <!-- Checkout & Payment Stack -->
         <div class="product-row">
           <div class="product-meta">
             <div class="status-marker" id="checkout-marker"></div>
             <div>
-              <h4 class="product-title">FlexyPe Checkout</h4>
+              <h4 class="product-title">Checkout &amp; Payment Engine</h4>
               <span class="confidence-label">Confidence: <span id="checkout-confidence">-</span></span>
             </div>
           </div>
@@ -131,27 +134,27 @@
           <ul id="checkout-evidence-list" class="evidence-list"></ul>
         </div>
 
-        <!-- FlexyPass -->
+        <!-- Customer Auth Stack -->
         <div class="product-row divider-top">
           <div class="product-meta">
-            <div class="status-marker" id="pass-marker"></div>
+            <div class="status-marker" id="auth-marker"></div>
             <div>
-              <h4 class="product-title">FlexyPass Open Login</h4>
-              <span class="confidence-label">Confidence: <span id="pass-confidence">-</span></span>
+              <h4 class="product-title">Customer Auth &amp; Login Stack</h4>
+              <span class="confidence-label">Confidence: <span id="auth-confidence">-</span></span>
             </div>
           </div>
-          <button class="evidence-toggle" data-target="pass-evidence">Inspect Signals</button>
+          <button class="evidence-toggle" data-target="auth-evidence">Inspect Signals</button>
         </div>
-        <div id="pass-evidence" class="evidence-box hidden">
-          <ul id="pass-evidence-list" class="evidence-list"></ul>
+        <div id="auth-evidence" class="evidence-box hidden">
+          <ul id="auth-evidence-list" class="evidence-list"></ul>
         </div>
 
-        <!-- FlexyCart -->
+        <!-- Cart Engine Stack -->
         <div class="product-row divider-top">
           <div class="product-meta">
             <div class="status-marker" id="cart-marker"></div>
             <div>
-              <h4 class="product-title">FlexyCart Slide Drawer</h4>
+              <h4 class="product-title">Cart &amp; Drawer Engine</h4>
               <span class="confidence-label">Confidence: <span id="cart-confidence">-</span></span>
             </div>
           </div>
@@ -163,36 +166,36 @@
       </div>
     </section>
 
-    <!-- Section: Disabled Integrations -->
+    <!-- Section: Inactive Code & Disabled Traces -->
     <section class="card">
       <div class="card-header">
         <svg xmlns="http://www.w3.org/2000/svg" class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-        <h3>Disabled Integrations</h3>
+        <h3>Inactive Code &amp; Disabled Traces</h3>
       </div>
       <div class="card-body flex-col gap-10">
-        <!-- FlexyPe Checkout Inactive -->
+        <!-- Disabled Checkout -->
         <div class="disabled-product-box" id="checkout-disabled-box">
           <div class="disabled-header">
             <div class="status-marker small-marker" id="checkout-disabled-marker"></div>
-            <h5>FlexyPe Checkout</h5>
+            <h5>Checkout &amp; Payment Inactive Traces</h5>
           </div>
           <p class="disabled-reason" id="checkout-disabled-reason">Scanning...</p>
         </div>
         
-        <!-- FlexyPass Inactive -->
-        <div class="disabled-product-box" id="pass-disabled-box">
+        <!-- Disabled Auth -->
+        <div class="disabled-product-box" id="auth-disabled-box">
           <div class="disabled-header">
-            <div class="status-marker small-marker" id="pass-disabled-marker"></div>
-            <h5>FlexyPass</h5>
+            <div class="status-marker small-marker" id="auth-disabled-marker"></div>
+            <h5>Authentication Inactive Traces</h5>
           </div>
-          <p class="disabled-reason" id="pass-disabled-reason">Scanning...</p>
+          <p class="disabled-reason" id="auth-disabled-reason">Scanning...</p>
         </div>
 
-        <!-- FlexyCart Inactive -->
+        <!-- Disabled Cart -->
         <div class="disabled-product-box" id="cart-disabled-box">
           <div class="disabled-header">
             <div class="status-marker small-marker" id="cart-disabled-marker"></div>
-            <h5>FlexyCart</h5>
+            <h5>Cart Engine Inactive Traces</h5>
           </div>
           <p class="disabled-reason" id="cart-disabled-reason">Scanning...</p>
         </div>
@@ -203,11 +206,11 @@
     <section class="card">
       <div class="card-header">
         <svg xmlns="http://www.w3.org/2000/svg" class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-        <h3>Third Party Apps</h3>
+        <h3>Third-Party App Stack</h3>
       </div>
       <div class="card-body">
         <div id="apps-container" class="apps-grid">
-          <!-- Apps lists populating here -->
+          <!-- Apps list populates here -->
           <div class="no-apps-detected">No common third party apps detected.</div>
         </div>
       </div>
@@ -217,7 +220,7 @@
     <section class="card">
       <div class="card-header">
         <svg xmlns="http://www.w3.org/2000/svg" class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
-        <h3>Store Features</h3>
+        <h3>Storefront Capabilities</h3>
       </div>
       <div class="card-body">
         <div class="features-grid">
@@ -290,12 +293,12 @@
   <!-- Footer Actions -->
   <footer class="app-footer">
     <div class="footer-meta">
-      <span class="tag">FlexyPe Support Console</span>
+      <span class="tag">Shopify Inspector</span>
       <span class="version">v1.0.0</span>
     </div>
     <div class="footer-btns">
       <button id="export-btn" class="btn btn-secondary hidden">Export Report</button>
-      <button id="refresh-btn" class="btn btn-primary">Refresh Diagnostics</button>
+      <button id="refresh-btn" class="btn btn-primary">Refresh Scan</button>
     </div>
   </footer>
 

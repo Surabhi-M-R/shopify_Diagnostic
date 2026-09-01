@@ -16,10 +16,10 @@
       return { isShopify: false, data: null };
     }
 
-    // 2. FlexyPe Product Detection
-    var flexypeResult = NS.FlexyPeDetector.detect();
+    // 2. Core E-commerce Stack Detection
+    var stackResult = NS.StackDetector.detect();
 
-    // 3. Disabled Integration Detection
+    // 3. Disabled & Inactive Code Detection
     var disabledResult = NS.DisabledDetector.detect();
 
     // 4. Third-Party App Detection
@@ -35,7 +35,7 @@
       isShopify: true,
       data: {
         storeInfo: storeResult.data,
-        flexypeProducts: flexypeResult,
+        coreStack: stackResult,
         disabledIntegrations: disabledResult,
         thirdPartyApps: appResult,
         storeFeatures: featureResult
