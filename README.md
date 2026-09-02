@@ -119,4 +119,4 @@ Scans **27 apps** across 8 categories (Marketing, Reviews, Analytics, Page Build
 
 | Dashboard (Active Scan) | Exported Diagnostic Report |
 | :---: | :---: |
-| ![Dashboard Scan Results](screenshots/dashboard_active.png) | ![Exported Report Dashboard](screenshots/exported_report.png) |
+| ![Dashboard Scan Results](screenshots/Screenshot%202026-09-02%20215557.png) | ![Exported Report Dashboard](screenshots/Screenshot%202026-09-02%20215616.png) |
