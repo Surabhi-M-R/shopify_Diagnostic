@@ -541,7 +541,7 @@ main {
   display: none;
 }
 
-/* Product rows in FlexyPe card */
+/* Core Architecture Product Rows */
 .product-row {
   display: flex;
   align-items: center;
